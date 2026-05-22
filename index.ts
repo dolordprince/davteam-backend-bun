@@ -12,7 +12,6 @@ const app = new Elysia()
     services: ["ai", "generator", "zip-download"]
   }))
 
-  // Groq AI — replaces dead Ollama relay
   .post("/api/ai", async ({ body }) => {
     const { input } = body as any;
 
@@ -31,15 +30,15 @@ const app = new Elysia()
       });
 
       const data = await res.json();
-      return { output: data.choices?.[0]?.message?.content || "No response" };
-    } catch {
-      return { output: "Groq unavailable" };
+      // Return full response for debugging
+      return { output: data.choices?.[0]?.message?.content || "No response", debug: data };
+    } catch (err: any) {
+      return { output: "Groq unavailable", error: err.message };
     }
   })
 
   .post("/api/generate", async ({ body }) => {
     const { prompt } = body as any;
-
     return {
       projectName: "hermes-generated-app",
       prompt,
@@ -54,11 +53,9 @@ const app = new Elysia()
   .post("/api/download", async ({ body }) => {
     const { files } = body as any;
     const zip = new JSZip();
-
     for (const [name, content] of Object.entries(files)) {
       zip.file(name, content as string);
     }
-
     const buffer = await zip.generateAsync({ type: "nodebuffer" });
     writeFileSync("./generated.zip", buffer);
     return { download: "./generated.zip" };
