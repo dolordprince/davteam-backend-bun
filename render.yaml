@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: davteam-backend-bun
+    runtime: node
+    buildCommand: "npm install -g bun && bun install"
+    startCommand: "bun index.ts"
+    plan: free
+    envVars:
+      - key: PORT
+        value: 10000

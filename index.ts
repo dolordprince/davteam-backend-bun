@@ -69,6 +69,6 @@ const app = new Elysia()
     return { download: path };
   })
 
-  .listen(8080);
+  .listen(Number(process.env.PORT) || 10000);
 
 console.log("[HERMES READY] :8080");
