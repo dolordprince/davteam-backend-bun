@@ -6,37 +6,37 @@ import { writeFileSync } from "fs";
 const app = new Elysia()
   .use(cors())
 
-  // Health probe — Cloud Shell uptime check
   .get("/", () => ({
     status: "HERMES AI ONLINE",
     runtime: "bun",
     services: ["ai", "generator", "zip-download"]
   }))
 
-  // Ollama relay — expects local llama3 on :11434
+  // Groq AI — replaces dead Ollama relay
   .post("/api/ai", async ({ body }) => {
     const { input } = body as any;
 
     try {
-      const res = await fetch("http://127.0.0.1:11434/api/generate", {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
+        },
         body: JSON.stringify({
-          model: "llama3",
-          prompt: input,
-          stream: false   // streaming disabled; avoids chunked-read complexity on mobile clients
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: input }],
+          max_tokens: 1024
         })
       });
 
       const data = await res.json();
-
-      return { output: data?.response || "AI offline" };
+      return { output: data.choices?.[0]?.message?.content || "No response" };
     } catch {
-      return { output: "AI engine unavailable" };
+      return { output: "Groq unavailable" };
     }
   })
 
-  // Static scaffold generator — swap for Groq call when Ollama absent
   .post("/api/generate", async ({ body }) => {
     const { prompt } = body as any;
 
@@ -51,24 +51,19 @@ const app = new Elysia()
     };
   })
 
-  // ZIP packager — writes to CWD; serve via Cloudflare tunnel
   .post("/api/download", async ({ body }) => {
     const { files } = body as any;
-
     const zip = new JSZip();
 
     for (const [name, content] of Object.entries(files)) {
       zip.file(name, content as string);
     }
 
-    // nodebuffer required; Bun's Response.blob() path adds latency on ARM
     const buffer = await zip.generateAsync({ type: "nodebuffer" });
-    const path = "./generated.zip";
-    writeFileSync(path, buffer);
-
-    return { download: path };
+    writeFileSync("./generated.zip", buffer);
+    return { download: "./generated.zip" };
   })
 
   .listen(Number(process.env.PORT) || 10000);
 
-console.log("[HERMES READY] :8080");
+console.log("[HERMES READY] :10000");
