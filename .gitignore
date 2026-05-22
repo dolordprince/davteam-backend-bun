@@ -1,0 +1,6 @@
+node_modules/
+generated.zip
+hermes.log
+hermes.pid
+nohup.out
+.env
