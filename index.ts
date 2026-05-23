@@ -3,7 +3,7 @@ import cors from "@elysiajs/cors";
 import JSZip from "jszip";
 import { writeFileSync } from "fs";
 
-const API_KEY = process.env.HERMES_API_KEY || "hermes-dev-key";
+const API_KEY = process.env.davteam_API_KEY || "hermes-dev-key";
 
 // Auth middleware — checks x-api-key header
 const authGuard = ({ headers, set }: any) => {
