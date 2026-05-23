@@ -31,7 +31,7 @@ const app = new Elysia()
 
       const data = await res.json();
       // Return full response for debugging
-      return { output: data.choices?.[0]?.message?.content || "No response", debug: data };
+      return { output: data.choices?.[0]?.message?.content || "No response" };
     } catch (err: any) {
       return { output: "Groq unavailable", error: err.message };
     }
